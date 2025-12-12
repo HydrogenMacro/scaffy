@@ -1,0 +1,12 @@
+[package]
+name = "scaffy"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+clap = { version = "4.5.53", features = ["derive"] }
+color-eyre = "0.6.5"
+log = "0.4.29"
+ratatui = "0.29.0"
+simple-logging = "2.0.2"
+tui-input = "0.14.0"
