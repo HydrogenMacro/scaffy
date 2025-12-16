@@ -34,15 +34,15 @@ impl App {
             tabs: vec![
                 AppTab {
                     label: "Scaffold",
-                    tab: Box::new(ScaffoldTab::default()),
+                    tab: Box::new(ScaffoldTab::new()),
                 },
                 AppTab {
                     label: "Scaffold",
-                    tab: Box::new(ScaffoldTab::default()),
+                    tab: Box::new(ScaffoldTab::new()),
                 },
                 AppTab {
                     label: "Scaffold",
-                    tab: Box::new(ScaffoldTab::default()),
+                    tab: Box::new(ScaffoldTab::new()),
                 },
             ],
         }

@@ -1,15 +1,22 @@
 use std::{
     collections::HashMap,
     fs::{File, OpenOptions},
+    iter,
     process::exit,
 };
 
-use crate::{app::RenderCommands, tabs::Tab};
+use crate::{
+    app::RenderCommands,
+    tabs::{
+        Tab,
+        tag::{Tag, TagType},
+    },
+};
 use log::info;
 use ratatui::{
-    crossterm::event::{Event, MouseButton, MouseEventKind},
+    crossterm::event::{Event, KeyCode, MouseButton, MouseEventKind},
     prelude::*,
-    widgets::{self, Block, Borders, ListState},
+    widgets::{self, Block, Borders, ListState, block::Title},
 };
 use tui_input::{Input, backend::crossterm::EventHandler};
 #[derive(Default)]
@@ -23,22 +30,91 @@ pub struct ScaffoldTab {
 }
 
 impl ScaffoldTab {
+    pub fn new() -> Self {
+        let mut scaffold_tab = ScaffoldTab::default();
+        scaffold_tab.update_list();
+        scaffold_tab
+    }
     fn update_list(&mut self) {
-        let a  = vec!["a"];
-        self.list_data_search_query.contains(self.searchbar_input.value());
+        let a = vec![
+            (
+                "abc".to_owned(),
+                vec![
+                    Tag::new("abc".to_owned(), TagType::Framework),
+                    Tag::new("abc".to_owned(), TagType::Language),
+                    Tag::new("abc".to_owned(), TagType::Specialization),
+                ],
+            ),
+            (
+                "def".to_owned(),
+                vec![Tag::new("abc".to_owned(), TagType::Framework)],
+            ),
+            (
+                "ghi".to_owned(),
+                vec![Tag::new("abc".to_owned(), TagType::Framework)],
+            ),
+            (
+                "jkl".to_owned(),
+                vec![Tag::new("abc".to_owned(), TagType::Framework)],
+            ),
+        ];
+        self.list_data = a
+            .into_iter()
+            .filter(|(s, _)| s.contains(&self.list_data_search_query))
+            .map(|(name, tags)| ScaffoldListEntry::new(name, "description".repeat(5), tags))
+            .collect();
+        self.list_state.select(Some(0));
     }
 }
 
 #[derive(Debug, Default)]
-pub struct ScaffoldListEntry {}
+pub struct ScaffoldListEntry {
+    template_name: String,
+    desc: String,
+    tags: Vec<Tag>,
+}
+impl ScaffoldListEntry {
+    pub fn new(template_name: String, desc: String, tags: Vec<Tag>) -> Self {
+        ScaffoldListEntry {
+            template_name,
+            desc,
+            tags,
+        }
+    }
+}
+
 #[derive(Debug, Default)]
 pub struct ScaffoldTabAreas {
     searchbar: Rect,
     list: Rect,
 }
-impl<'a> From<&ScaffoldListEntry> for widgets::ListItem<'a> {
-    fn from(value: &ScaffoldListEntry) -> Self {
-        widgets::ListItem::new("a")
+impl ScaffoldListEntry {
+    fn to_list_item(&self, is_even_item: bool, is_selected: bool) -> widgets::ListItem<'_> {
+        let bg_color = if is_selected { Color::Yellow } else if is_even_item { Color::Reset } else { Color::Gray };
+        let contents = Text::from(vec![
+            Line::from(vec![Span::styled(
+                &self.template_name,
+                Style::new().add_modifier(Modifier::BOLD).bg(bg_color),
+            ), Span::raw(" ".repeat(200)).bg(bg_color)]),
+            Line::from(vec![Span::styled(
+                &self.desc,
+                Style::new().add_modifier(Modifier::ITALIC).bg(bg_color),
+            ), Span::raw(" ".repeat(200)).bg(bg_color)]),
+            Line::from(
+                self.tags
+                    .iter()
+                    .flat_map(|a| {
+                        a.to_line(bg_color)
+                            .spans
+                            .into_iter()
+                            .chain(iter::once(Span::raw(" ").bg(bg_color)))
+                    }).chain(iter::once(Span::raw(" ".repeat(200)).bg(bg_color)))
+                    
+                    .collect::<Vec<Span>>(),
+                )
+        ]);
+
+        widgets::ListItem::new(contents)
     }
 }
 
@@ -46,7 +122,7 @@ impl<'a> From<&ScaffoldListEntry> for widgets::ListItem<'a> {
 pub enum ScaffoldTabFocus {
     #[default]
     Searchbar,
-    List(usize),
+    List,
 }
 impl Tab for ScaffoldTab {
     fn render(&mut self, area: Rect, buf: &mut Buffer, commands: &mut RenderCommands) {
@@ -73,30 +149,42 @@ impl Tab for ScaffoldTab {
 
         searchbar.render(searchbar_area, buf);
 
-        let list = widgets::List::new(self.list_data.iter()).block(Block::new().title("abc"));
-        StatefulWidget::render(list, list_area, buf, &mut self.list_state);
+        let list = widgets::List::new(self.list_data.iter().enumerate().map(|(i, list_entry)| {
+            list_entry.to_list_item(
+                i % 2 == 1,
+                self.list_state
+                    .selected()
+                    .is_some_and(|selected_idx| i == selected_idx),
+            )
+        }))
+        .block(Block::bordered().title_bottom("<TAB> - Switch Focus | <UP> / <DOWN> - Move"));
+        StatefulWidget::render(list, list_area, buf, &mut self.list_state)
     }
     fn handle_event(&mut self, ev: Event) {
         match &ev {
-            Event::Mouse(mouse_ev) => {
-                let mouse_pos = Position {
-                    x: mouse_ev.column,
-                    y: mouse_ev.row,
-                };
-                if let MouseEventKind::Down(MouseButton::Left) = mouse_ev.kind {
-                    if self.areas.list.contains(mouse_pos) {
-                        if let Some(list_entry) = self.list_data.first() {
-                            let list_item_height = widgets::ListItem::from(list_entry).height();
-                            self.focus =
-                                ScaffoldTabFocus::List(self.list_state.offset() / list_item_height);
-                        } else {
-                            self.focus = ScaffoldTabFocus::List(0);
-                        }
-                    } else if self.areas.searchbar.contains(mouse_pos) {
-                        self.focus = ScaffoldTabFocus::Searchbar;
-                    }
+            Event::Key(key) => match key.code {
+                KeyCode::Tab => {
+                    self.focus = match self.focus {
+                        ScaffoldTabFocus::Searchbar => ScaffoldTabFocus::List,
+                        ScaffoldTabFocus::List => ScaffoldTabFocus::Searchbar,
+                    };
                 }
-            }
+                KeyCode::Up => match self.focus {
+                    ScaffoldTabFocus::List => {
+                        self.list_state.select_previous();
+                    }
+                    ScaffoldTabFocus::Searchbar => {}
+                },
+                KeyCode::Down => match self.focus {
+                    ScaffoldTabFocus::List => {
+                        if self.list_state.selected() != Some(self.list_data.len() - 1) {
+                            self.list_state.select_next();
+                        }
+                    }
+                    ScaffoldTabFocus::Searchbar => {}
+                },
+                _ => {}
+            },
             _ => {}
         }
         match self.focus {
@@ -107,7 +195,7 @@ impl Tab for ScaffoldTab {
                     self.update_list();
                 }
             }
-            ScaffoldTabFocus::List(list_idx) => {}
+            ScaffoldTabFocus::List => {}
         }
     }
 }

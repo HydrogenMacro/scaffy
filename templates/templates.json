@@ -1,0 +1,13 @@
+[
+    {
+        "name": "Vite Starter",
+        "path": "/vite-starter",
+        "author": "hydro",
+        "commitVersion": "e0f43fd",
+        "tags": {
+            "languages": ["typescript"],
+            "frameworks": ["tailwind", "react"]
+        },
+        "stale": false
+    }
+]

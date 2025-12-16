@@ -1,4 +1,5 @@
 pub mod scaffold;
+pub mod tag;
 
 use clap::Subcommand;
 use ratatui::{Frame, buffer::Buffer, crossterm::event::Event, layout::{Position, Rect}};
