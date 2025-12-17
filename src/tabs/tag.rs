@@ -9,12 +9,13 @@ pub enum TagType {
 
 #[derive(Debug)]
 pub struct Tag {
-    text: String,
-    tag_type: TagType,
+    pub text: String,
+    pub tag_type: TagType,
+    pub version: Option<String>
 }
 impl Tag {
-    pub fn new(text: String, tag_type: TagType) -> Self {
-        Tag { text, tag_type }
+    pub fn new(text: String, tag_type: TagType, version: Option<String>) -> Self {
+        Tag { text, tag_type, version }
     }
     pub fn tag_col(&self) -> Color {
         match self.tag_type {
@@ -23,7 +24,7 @@ impl Tag {
             TagType::Specialization => Color::Gray,
         }
     }
-    pub fn to_line(&self, bg_color: Color) -> Line {
+    pub fn to_line<'a>(&'a self, bg_color: Color) -> Line<'a> {
         Line::from(vec![
             Span::styled("▐", Style::new().fg(self.tag_col()).bg(bg_color)),
             Span::styled(&self.text, Style::new().bg(self.tag_col())),

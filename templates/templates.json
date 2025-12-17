@@ -3,11 +3,19 @@
         "name": "Vite Starter",
         "path": "/vite-starter",
         "author": "hydro",
-        "commitVersion": "e0f43fd",
+        "description": "Minimal Vite starter",
         "tags": {
-            "languages": ["typescript"],
-            "frameworks": ["tailwind", "react"]
-        },
-        "stale": false
+            "languages": {
+                "typescript": ""
+            },
+            "frameworks": {
+                "tailwind": "4",
+                "react": "16"
+            },
+            "misc": {
+                "prettier": "",
+                "just": ""
+            }
+        }
     }
 ]

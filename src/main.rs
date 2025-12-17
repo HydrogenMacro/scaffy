@@ -12,7 +12,7 @@ use ratatui::{
 use crate::{app::App};
 
 fn main() -> Result<()> {
-    simple_logging::log_to_file("aaa", log::LevelFilter::Info)?;
+    //simple_logging::log_to_file("aaa", log::LevelFilter::Info)?;
     color_eyre::install()?;
     std::panic::set_hook(Box::new(|panic| {
         execute!(stdout(), DisableMouseCapture).unwrap_or_else(|e| eprintln!("failed to disable mouse capture:\n{}", e));
