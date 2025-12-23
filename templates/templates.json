@@ -20,6 +20,6 @@
                 "biome": ""
             }
         },
-        "projectNameReplacementFiles": ["index.html", "package.json"]
+        "projectDetailsInjectionFiles": ["index.html", "package.json", "src/index.tsx", "src/Header.tsx", "public/manifest.json"]
     }
 ]

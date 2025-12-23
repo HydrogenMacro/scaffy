@@ -22,12 +22,14 @@ pub struct TemplateInfo {
     author: String,
     description: String,
     tags: TemplateInfoTags,
+    projectDetailsInjectionFiles: Vec<String>
 }
 
 #[derive(Deserialize, Debug)]
 pub struct TemplateInfoTags {
     pub languages: HashMap<Rc<str>, String>,
     pub frameworks: HashMap<Rc<str>, String>,
+    pub libraries: HashMap<Rc<str>, String>,
     pub misc: HashMap<Rc<str>, String>,
 }
 pub fn fetch_template_info() {

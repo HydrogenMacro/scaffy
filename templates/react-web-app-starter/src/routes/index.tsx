@@ -68,7 +68,7 @@ function Root() {
 			</div>
 			<div className="p-4 flex justify-between transition-colors bg-base-100 text-base-900">
 				<div className="text-md">
-					Copyright &copy;{new Date().getFullYear()} John Doe. All Rights
+					Copyright &copy;{new Date().getFullYear()} @@SCAFFY_AUTHOR@@. All Rights
 					Reserved.
 				</div>
 				<div className="flex gap-2">
