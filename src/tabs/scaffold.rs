@@ -2,14 +2,14 @@ use std::{
     collections::HashMap,
     fs::{File, OpenOptions},
     iter,
-    process::{self, exit},
+    process::{self, exit}, rc::Rc,
 };
 
 use crate::{
     app::Commands,
     tabs::{
-        Tab, project_init::ProjectInitTab, tag::{Tag, TagType}
-    },
+        Tab, project_init::ProjectInitTab, tag::{Tag, TagType, parse_template_info_tags}
+    }, templates::TEMPLATE_INFOS,
 };
 use log::info;
 use ratatui::{
@@ -35,47 +35,24 @@ impl ScaffoldTab {
         scaffold_tab
     }
     fn update_list(&mut self) {
-        let a = vec![
-            (
-                "abc".to_owned(),
-                vec![
-                    Tag::new("abc".to_owned(), TagType::Framework, None),
-                    Tag::new("abc".to_owned(), TagType::Language, None),
-                    Tag::new("abc".to_owned(), TagType::Specialization, None),
-                ],
-            ),
-            (
-                "def".to_owned(),
-                vec![Tag::new("abc".to_owned(), TagType::Framework, None)],
-            ),
-            (
-                "ghi".to_owned(),
-                vec![Tag::new("abc".to_owned(), TagType::Framework, None)],
-            ),
-            (
-                "jkl".to_owned(),
-                vec![Tag::new("abc".to_owned(), TagType::Framework, None)],
-            ),
-        ];
-        self.list_data = a
-            .into_iter()
-            .map(|(name, tags)| ScaffoldListEntry::new(name, "template_id".into(), "author".into(), "description ".repeat(5), tags))
-            .filter(|list_entry| list_entry.matches_query(&self.list_data_search_query))
-            .collect();
+
+        self.list_data = TEMPLATE_INFOS.with(|template_infos| {
+            template_infos.borrow().values().map(|template_info| ScaffoldListEntry::new(template_info.name.clone(), template_info.path.clone(), template_info.author.clone(), template_info.description.clone(), parse_template_info_tags(&template_info.tags))).collect()
+        });
         self.list_state.select(Some(0));
     }
 }
 
 #[derive(Debug, Default)]
 pub struct ScaffoldListEntry {
-    template_name: String,
-    template_id: String,
-    author: String,
-    desc: String,
+    template_name: Rc<str>,
+    template_id: Rc<str>,
+    author: Rc<str>,
+    desc: Rc<str>,
     tags: Vec<Tag>,
 }
 impl ScaffoldListEntry {
-    pub fn new(template_name: String, template_id: String, author: String, desc: String, tags: Vec<Tag>) -> Self {
+    pub fn new(template_name: Rc<str>, template_id: Rc<str>, author: Rc<str>, desc: Rc<str>, tags: Vec<Tag>) -> Self {
         ScaffoldListEntry {
             template_name,
             template_id,
@@ -106,14 +83,14 @@ impl ScaffoldListEntry {
         let contents = Text::from(vec![
             Line::from(vec![
                 Span::styled(
-                    &self.template_name,
+                    &*self.template_name,
                     Style::new().add_modifier(Modifier::BOLD).bg(bg_color),
                 ),
                 Span::raw(" ".repeat(200)).bg(bg_color),
             ]),
             Line::from(vec![
                 Span::styled(
-                    &self.desc,
+                    &*self.desc,
                     Style::new().add_modifier(Modifier::ITALIC).bg(bg_color),
                 ),
                 Span::raw(" ".repeat(200)).bg(bg_color),

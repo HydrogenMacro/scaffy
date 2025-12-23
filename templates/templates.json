@@ -6,18 +6,18 @@
         "description": "Opinionated React MPA for web apps",
         "tags": {
             "languages": {
-                "typescript": ""
+                "typescript": null
             },
             "frameworks": {
                 "react": "19",
-                "tanstack-router": "",
+                "tanstack-router": null,
                 "tailwind": "4"
             },
             "libraries": {
                 "valtio": "2"
             },
             "misc": {
-                "biome": ""
+                "biome": null
             }
         },
         "projectDetailsInjectionFiles": ["index.html", "package.json", "src/index.tsx", "src/Header.tsx", "public/manifest.json"]

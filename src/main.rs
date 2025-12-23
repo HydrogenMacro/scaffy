@@ -10,7 +10,7 @@ use ratatui::{
     DefaultTerminal, crossterm::{event::{DisableMouseCapture, EnableMouseCapture}, execute, terminal::{disable_raw_mode, enable_raw_mode}}, prelude::*, widgets::{self, ListState}
 };
 
-use crate::{app::App};
+use crate::{app::App, templates::fetch_template_info};
 
 fn main() -> Result<()> {
     //simple_logging::log_to_file("aaa", log::LevelFilter::Info)?;
@@ -22,6 +22,7 @@ fn main() -> Result<()> {
     }));
     execute!(stdout(), EnableMouseCapture)?;
     let terminal = ratatui::init();
+    fetch_template_info()?;
     let mut app = App::new();
     let result = app.run(terminal);
     ratatui::restore();
