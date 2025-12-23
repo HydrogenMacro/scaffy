@@ -1,0 +1,42 @@
+{
+	"short_name": "@@SCAFFY_PROJECT_NAME_TITLECASE@@",
+	"name": "@@SCAFFY_PROJECT_NAME_TITLECASE@@",
+	"icons": [
+		{
+			"src": "./favicon.svg",
+			"type": "image/svg+xml",
+			"sizes": "100x100"
+		}
+	],
+	"id": "/app?source=pwa",
+	"start_url": "/app?source=pwa",
+	"background_color": "#000000",
+	"display": "standalone",
+	"scope": "/",
+	"theme_color": "#000000",
+	"shortcuts": [
+		{
+			"name": "How's the weather today?",
+			"short_name": "Today",
+			"description": "View weather information for today",
+			"url": "/today?source=pwa",
+			"icons": [{ "src": "/images/today.png", "sizes": "192x192" }]
+		},
+		{
+			"name": "How's the weather tomorrow?",
+			"short_name": "Tomorrow",
+			"description": "View weather information for tomorrow",
+			"url": "/tomorrow?source=pwa",
+			"icons": [{ "src": "/images/tomorrow.png", "sizes": "192x192" }]
+		}
+	],
+	"description": "Description of @@SCAFFY_PROJECT_NAME_TITLECASE@@",
+	"screenshots": [
+		{
+			"src": "/images/screenshot1.png",
+			"type": "image/png",
+			"sizes": "540x720",
+			"form_factor": "narrow"
+		}
+	]
+}

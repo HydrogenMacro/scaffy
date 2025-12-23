@@ -1,5 +1,6 @@
 pub mod app;
 pub mod tabs;
+pub mod templates;
 
 use std::{collections::HashMap, io::stdout, process::exit};
 

@@ -1,0 +1,78 @@
+@import "tailwindcss";
+
+:has([data-theme="light"]) {
+	color-scheme: light;
+	--color-base-100: oklch(100% 0 0);
+	--color-base-200: oklch(98% 0 0);
+	--color-base-300: oklch(95% 0 0);
+	--color-base-content: oklch(21% 0.006 285.885);
+	--color-primary: oklch(45% 0.24 277.023);
+	--color-primary-content: oklch(93% 0.034 272.788);
+	--color-secondary: oklch(65% 0.241 354.308);
+	--color-secondary-content: oklch(94% 0.028 342.258);
+	--color-accent: oklch(77% 0.152 181.912);
+	--color-accent-content: oklch(38% 0.063 188.416);
+	--color-neutral: oklch(14% 0.005 285.823);
+	--color-neutral-content: oklch(92% 0.004 286.32);
+	--color-info: oklch(74% 0.16 232.661);
+	--color-info-content: oklch(29% 0.066 243.157);
+	--color-success: oklch(76% 0.177 163.223);
+	--color-success-content: oklch(37% 0.077 168.94);
+	--color-warning: oklch(82% 0.189 84.429);
+	--color-warning-content: oklch(41% 0.112 45.904);
+	--color-error: oklch(71% 0.194 13.428);
+	--color-error-content: oklch(27% 0.105 12.094);
+}
+:has([data-theme="dark"]) {
+	color-scheme: dark;
+	--theme-base-100: oklch(25.33% 0.016 252.42);
+	--theme-base-200: oklch(23.26% 0.014 253.1);
+	--theme-base-300: oklch(21.15% 0.012 254.09);
+	--theme-base-content: oklch(97.807% 0.029 256.847);
+	--theme-primary: oklch(58% 0.233 277.117);
+	--theme-primary-content: oklch(96% 0.018 272.314);
+	--theme-secondary: oklch(65% 0.241 354.308);
+	--theme-secondary-content: oklch(94% 0.028 342.258);
+	--theme-accent: oklch(77% 0.152 181.912);
+	--theme-accent-content: oklch(38% 0.063 188.416);
+	--theme-neutral: oklch(14% 0.005 285.823);
+	--theme-neutral-content: oklch(92% 0.004 286.32);
+	--theme-info: oklch(74% 0.16 232.661);
+	--theme-info-content: oklch(29% 0.066 243.157);
+	--theme-success: oklch(76% 0.177 163.223);
+	--theme-success-content: oklch(37% 0.077 168.94);
+	--theme-warning: oklch(82% 0.189 84.429);
+	--theme-warning-content: oklch(41% 0.112 45.904);
+	--theme-error: oklch(71% 0.194 13.428);
+	--theme-error-content: oklch(27% 0.105 12.094);
+}
+
+/* FIXME Biome's Intellisense tailwind directive support is currently not working */
+
+@theme {
+	--color-base-100: var(--theme-base-100);
+	--color-base-200: var(--theme-base-200);
+	--color-base-300: var(--theme-base-300);
+	--color-base-content: var(--theme-base-content);
+	--color-primary: var(--theme-primary);
+	--color-primary-content: var(--theme-primary-content);
+	--color-secondary: var(--theme-secondary);
+	--color-secondary-content: var(--theme-secondary-content);
+	--color-accent: var(--theme-accent);
+	--color-accent-content: var(--theme-accent-content);
+	--color-neutral: var(--theme-neutral);
+	--color-neutral-content: var(--theme-neutral-content);
+	--color-success: var(--theme-success);
+	--color-success-content: var(--theme-success-content);
+	--color-warning: var(--theme-warning);
+	--color-warning-content: var(--theme-warning-content);
+	--color-error: var(--theme-error);
+	--color-error-content: var(--theme-error-content);
+	--color-info: var(--theme-info);
+	--color-info-content: var(--theme-info-content);
+}
+
+@custom-variant dark (&:where(
+		:has([data-theme="dark"]),
+		:has([data-theme="dark"]) *
+	));

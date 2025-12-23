@@ -1,0 +1,8 @@
+@import "tailwindcss";
+@import "./theme.css";
+
+/* FIXME Biome's Intellisense tailwind directive support is currently not working */
+@theme {
+	--font-body: "Noto Sans", sans-serif;
+	--font-header: "Noto Sans", sans-serif;
+}
