@@ -15,17 +15,16 @@ use crate::{app::App, templates::fetch_template_info};
 fn main() -> Result<()> {
     //simple_logging::log_to_file("aaa", log::LevelFilter::Info)?;
     color_eyre::install()?;
-    std::panic::set_hook(Box::new(|panic| {
-        execute!(stdout(), DisableMouseCapture).unwrap_or_else(|e| eprintln!("failed to disable mouse capture:\n{}", e));
+    let eyre_hook = std::panic::take_hook();
+    std::panic::set_hook(Box::new(move |panic_info| {
         ratatui::restore();
-        eprintln!("{}", panic);
+        eyre_hook(panic_info);
+        eprintln!("{}", panic_info);
     }));
-    execute!(stdout(), EnableMouseCapture)?;
     let terminal = ratatui::init();
-    fetch_template_info()?;
+    fetch_template_info().unwrap_or_else(|err| panic!("{err}"));
     let mut app = App::new();
     let result = app.run(terminal);
     ratatui::restore();
-    execute!(stdout(), DisableMouseCapture)?;
     result
 }

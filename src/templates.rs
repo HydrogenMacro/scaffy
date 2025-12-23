@@ -14,13 +14,13 @@ pub static TEMPLATE_INFOS: RefCell<LazyCell<HashMap<Rc<str>, TemplateInfo>>> = R
 }
 
 #[derive(Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct TemplateInfo {
     pub name: Rc<str>,
     pub path: Rc<str>,
     pub author: Rc<str>,
     pub description: Rc<str>,
     pub tags: TemplateInfoTags,
-    pub project_details_injection_files: Vec<Rc<str>>,
 }
 
 #[derive(Deserialize, Debug)]

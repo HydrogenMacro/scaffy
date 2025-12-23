@@ -1,0 +1,3 @@
+[workspace]
+members = ["@@SCAFFY_PROJECT_NAME_KEBABCASE@@", "@@SCAFFY_PROJECT_NAME_KEBABCASE@@-macros"]
+resolver = "3"

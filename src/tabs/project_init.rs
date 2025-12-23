@@ -1,6 +1,5 @@
 use crate::app::Commands;
 use crate::tabs::Tab;
-use crate::tabs::scaffold::ScaffoldTab;
 use ratatui::crossterm::event::Event;
 use ratatui::crossterm::event::KeyCode;
 use ratatui::crossterm::event::KeyModifiers;

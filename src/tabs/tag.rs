@@ -4,7 +4,7 @@ use ratatui::{prelude::*, widgets};
 
 use crate::templates::TemplateInfoTags;
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub enum TagType {
     Language,
     Framework,
@@ -34,6 +34,7 @@ impl Tag {
         Line::from(vec![
             Span::styled("▐", Style::new().fg(self.tag_col()).bg(bg_color)),
             Span::styled(&*self.text, Style::new().bg(self.tag_col())),
+            Span::styled(self.version.as_ref().map(|version| format!("@{version}")).unwrap_or(String::new()), Style::new().bg(self.tag_col())),
             Span::styled("▌", Style::new().fg(self.tag_col()).bg(bg_color)),
             ])
     }
@@ -41,7 +42,7 @@ impl Tag {
 
 pub fn parse_template_info_tags(template_info_tags: &TemplateInfoTags) -> Vec<Tag> {
     let map_to_tag = |tag_type: TagType| {
-        return |(name, version): (&Rc<str>, &Option<Rc<str>>)| Tag::new(name.clone(), TagType::Framework, version.clone());
+        return move |(name, version): (&Rc<str>, &Option<Rc<str>>)| Tag::new(name.clone(), tag_type, version.clone());
     };
     [
         template_info_tags.frameworks.iter().map(map_to_tag(TagType::Framework)),

@@ -1,0 +1,10 @@
+[package]
+name = "@@SCAFFY_PROJECT_NAME_KEBABCASE@@"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+log = "0.4"
+anyhow = "1"
+env_logger = "0.11.8"
+@@SCAFFY_PROJECT_NAME_KEBABCASE@@-macros = { path = "../@@SCAFFY_PROJECT_NAME_KEBABCASE@@-macros" }

@@ -2,7 +2,7 @@
     {
         "name": "React Web App Starter",
         "path": "react-web-app-starter",
-        "author": "hydro",
+        "author": "hydrogenmacro",
         "description": "Opinionated React MPA for web apps",
         "tags": {
             "languages": {
@@ -19,7 +19,23 @@
             "misc": {
                 "biome": null
             }
-        },
-        "projectDetailsInjectionFiles": ["index.html", "package.json", "src/index.tsx", "src/Header.tsx", "public/manifest.json"]
+        }
+    },
+    {
+        "name": "Basic Rust Workspace Template",
+        "path": "basic-rust-workspace",
+        "author": "hydrogenmacro",
+        "description": "Barebones Cargo workspace, with bin and proc macro lib crates",
+        "tags": {
+            "languages": {
+                "rust": null
+            },
+            "frameworks": {
+            },
+            "libraries": {
+            },
+            "misc": {
+            }
+        }
     }
 ]
