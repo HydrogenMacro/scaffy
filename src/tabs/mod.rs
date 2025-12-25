@@ -1,6 +1,7 @@
 pub mod project_init;
-pub mod scaffold;
+pub mod search;
 pub mod tag;
+pub mod template;
 
 use clap::Subcommand;
 use ratatui::{

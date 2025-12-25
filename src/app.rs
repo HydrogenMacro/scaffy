@@ -10,7 +10,7 @@ use ratatui::{
     widgets::{self, ListState},
 };
 
-use crate::tabs::{Tab, scaffold::ScaffoldTab};
+use crate::tabs::{Tab, search::ScaffoldTab};
 
 #[derive(Default)]
 pub struct Commands {

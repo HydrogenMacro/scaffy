@@ -1,5 +1,6 @@
 use crate::app::Commands;
 use crate::tabs::Tab;
+use crate::template_info::TEMPLATE_INFOS;
 use ratatui::crossterm::event::Event;
 use ratatui::crossterm::event::KeyCode;
 use ratatui::crossterm::event::KeyModifiers;
@@ -39,9 +40,14 @@ pub struct ProjectInitTab {
 }
 impl ProjectInitTab {
     pub fn new(template_dir: &str) -> Self {
-        ProjectInitTab {
-            current_page: ProjectInitPage::Preview,
-        }
+        TEMPLATE_INFOS.with(|template_infos| {
+            let template_infos = template_infos.borrow();
+            let template_info  = template_infos.get(template_dir).unwrap();
+            template_info.path.clone();
+            ProjectInitTab {
+                current_page: ProjectInitPage::Preview,
+            }
+        })
     }
 }
 

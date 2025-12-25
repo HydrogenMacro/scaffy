@@ -1,6 +1,6 @@
 pub mod app;
 pub mod tabs;
-pub mod templates;
+pub mod template_info;
 
 use std::{collections::HashMap, io::stdout, process::exit};
 
@@ -10,10 +10,10 @@ use ratatui::{
     DefaultTerminal, crossterm::{event::{DisableMouseCapture, EnableMouseCapture}, execute, terminal::{disable_raw_mode, enable_raw_mode}}, prelude::*, widgets::{self, ListState}
 };
 
-use crate::{app::App, templates::fetch_template_info};
+use crate::{app::App, template_info::fetch_template_info};
 
 fn main() -> Result<()> {
-    //simple_logging::log_to_file("aaa", log::LevelFilter::Info)?;
+    simple_logging::log_to_file(".logs", log::LevelFilter::Info)?;
     color_eyre::install()?;
     let eyre_hook = std::panic::take_hook();
     std::panic::set_hook(Box::new(move |panic_info| {

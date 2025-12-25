@@ -9,7 +9,7 @@ use crate::{
     app::Commands,
     tabs::{
         Tab, project_init::ProjectInitTab, tag::{Tag, TagType, parse_template_info_tags}
-    }, templates::TEMPLATE_INFOS,
+    }, template_info::TEMPLATE_INFOS,
 };
 use log::info;
 use ratatui::{
@@ -164,7 +164,7 @@ impl Tab for ScaffoldTab {
         }))
         .block(
             Block::bordered()
-                .title_bottom(" <ESC> - Exit | <TAB> - Switch Focus | <UP> / <DOWN> - Scroll List ")
+                .title_bottom(" <ESC> - Exit | <TAB> - Switch Focus | <UP> / <DOWN> - Scroll List | <ENTER> - Select ")
                 .border_style(Style::new().fg(list_border_color)),
         );
         StatefulWidget::render(list, list_area, buf, &mut self.list_state)
@@ -180,7 +180,11 @@ impl Tab for ScaffoldTab {
                 }
                 KeyCode::Up => match self.focus {
                     ScaffoldTabFocus::List => {
-                        self.list_state.select_previous();
+                        if self.list_state.selected() != Some(0) {
+                            self.list_state.select_previous();
+                        } else {
+                            self.list_state.select(Some(self.list_data.len() - 1));
+                        }
                     }
                     ScaffoldTabFocus::Searchbar => {}
                 },
@@ -188,6 +192,8 @@ impl Tab for ScaffoldTab {
                     ScaffoldTabFocus::List => {
                         if self.list_state.selected() != Some(self.list_data.len() - 1) {
                             self.list_state.select_next();
+                        } else {
+                            self.list_state.select_first();
                         }
                     }
                     ScaffoldTabFocus::Searchbar => {}

@@ -8,7 +8,7 @@ use std::{
 };
 
 const SOURCES: &'static [&'static str] =
-    &["https://raw.githubusercontent.com/HydrogenMacro/scaffy/refs/heads/master/templates"];
+    &["https://cdn.jsdelivr.net/gh/hydrogenmacro/scaffy@master/templates"];
 thread_local! {
 pub static TEMPLATE_INFOS: RefCell<LazyCell<HashMap<Rc<str>, TemplateInfo>>> = RefCell::new(LazyCell::new(|| HashMap::new()));
 }
