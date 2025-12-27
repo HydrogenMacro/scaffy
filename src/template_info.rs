@@ -1,14 +1,15 @@
 use color_eyre::eyre;
+use itertools::Itertools;
+use log::info;
 use reqwest::blocking;
 use serde::Deserialize;
 use std::{
     cell::{LazyCell, RefCell},
     collections::HashMap,
-    rc::Rc,
+    rc::Rc, sync::Arc,
 };
 
-const SOURCES: &'static [&'static str] =
-    &["https://cdn.jsdelivr.net/gh/hydrogenmacro/scaffy@master/templates"];
+const SOURCE: &'static str = "https://cdn.jsdelivr.net/gh/hydrogenmacro/scaffy@master/templates";
 thread_local! {
 pub static TEMPLATE_INFOS: RefCell<LazyCell<HashMap<Rc<str>, TemplateInfo>>> = RefCell::new(LazyCell::new(|| HashMap::new()));
 }
@@ -31,17 +32,54 @@ pub struct TemplateInfoTags {
     pub misc: HashMap<Rc<str>, Option<Rc<str>>>,
 }
 pub fn fetch_template_info() -> eyre::Result<()> {
-    for &source in SOURCES {
-        let unparsed = blocking::get(format!("{}/templates.json", source))?.text()?;
-        let template_infos = serde_json::from_str::<Vec<TemplateInfo>>(&unparsed)?;
+    let unparsed = blocking::get(format!("{}/templates.json", SOURCE))?.text()?;
+    let template_infos = serde_json::from_str::<Vec<TemplateInfo>>(&unparsed)?;
 
-        TEMPLATE_INFOS.with(|template_info_cache| {
-            for template_info in template_infos {
-                template_info_cache
-                    .borrow_mut()
-                    .insert(template_info.path.clone(), template_info);
-            }
-        });
-    }
+    TEMPLATE_INFOS.with(|template_info_cache| {
+        for template_info in template_infos {
+            template_info_cache
+                .borrow_mut()
+                .insert(template_info.path.clone(), template_info);
+        }
+    });
+
     Ok(())
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase", rename_all_fields = "camelCase", tag = "type")]
+pub enum TemplateStructureDirEntryData {
+    Folder {
+        inject_project_info: bool,
+        children: HashMap<Rc<str>, TemplateStructureDirEntryData>,
+    },
+    File {
+        inject_project_info: bool,
+    },
+}
+
+pub type TemplateStructure = HashMap<Rc<str>, TemplateStructureDirEntryData>;
+pub fn get_template_structure(template_path: impl AsRef<str>) -> eyre::Result<TemplateStructure> {
+    let unparsed_data = blocking::get(format!(
+        "{}/__scaffy_template_contents/{}.json",
+        SOURCE,
+        template_path.as_ref()
+    ))?
+    .text()?;
+
+    let template_info = serde_json::from_str::<TemplateStructure>(&unparsed_data)?;
+    Ok(template_info)
+}
+
+pub async fn get_template_file_contents(template_path: impl AsRef<str>, file_parent_path: Rc<str>, file_name: Rc<str>) -> eyre::Result<String> {
+    let file_text = reqwest::get(format!(
+        "{}/{}{}/{}",
+        SOURCE,
+        template_path.as_ref(),
+        file_parent_path,
+        file_name
+    )).await?
+    .text().await?;
+
+    return Ok(file_text);
 }

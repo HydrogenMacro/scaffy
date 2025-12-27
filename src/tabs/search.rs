@@ -62,7 +62,7 @@ impl ScaffoldListEntry {
         }
     }
     pub fn matches_query<'a>(&self, queries: &str) -> bool {
-        queries.split(" ").all(|query| self.template_name.contains(query) || self.desc.contains(query) || self.tags.iter().any(|tag| tag.text.contains(query)))
+        queries.split(" ").all(|query| self.template_name.contains(query) || self.desc.contains(query) || self.tags.iter().any(|tag| tag.text.contains(query)) || self.author.contains(query))
     }
 }
 
@@ -73,25 +73,27 @@ pub struct ScaffoldTabAreas {
 }
 impl ScaffoldListEntry {
     fn to_list_item(&self, is_even_item: bool, is_selected: bool) -> widgets::ListItem<'_> {
-        let bg_color = if is_selected {
-            Color::White
+        let (bg_color, text_color, light_text_color) = if is_selected {
+            (Color::LightYellow, Color::Black, Color::DarkGray)
         } else if is_even_item {
-            Color::Reset
+            (Color::Reset, Color::Reset, Color::Gray)
         } else {
-            Color::Indexed(240)
+            (Color::DarkGray, Color::Gray, Color::Gray)
         };
         let contents = Text::from(vec![
             Line::from(vec![
                 Span::styled(
                     &*self.template_name,
-                    Style::new().add_modifier(Modifier::BOLD).bg(bg_color),
+                    Style::new().add_modifier(Modifier::BOLD).bg(bg_color).fg(text_color),
                 ),
+                Span::styled(" by ", Style::new().add_modifier(Modifier::ITALIC).bg(bg_color).fg(light_text_color)),
+                Span::styled(&*self.author, Style::new().add_modifier(Modifier::ITALIC).bg(bg_color).fg(light_text_color)),
                 Span::raw(" ".repeat(200)).bg(bg_color),
             ]),
             Line::from(vec![
                 Span::styled(
                     &*self.desc,
-                    Style::new().add_modifier(Modifier::ITALIC).bg(bg_color),
+                    Style::new().add_modifier(Modifier::ITALIC).bg(bg_color).fg(light_text_color),
                 ),
                 Span::raw(" ".repeat(200)).bg(bg_color),
             ]),
@@ -202,7 +204,7 @@ impl Tab for ScaffoldTab {
                     match self.focus {
                         ScaffoldTabFocus::List => {
                             commands.cache_current_tab();
-                            commands.switch_tab_to(ProjectInitTab::new(&self.list_data[self.list_state.selected().unwrap()].template_id));
+                            commands.switch_tab_to(ProjectInitTab::new(self.list_data[self.list_state.selected().unwrap()].template_id.clone()));
                         }
                         ScaffoldTabFocus::Searchbar => {
                             self.focus = ScaffoldTabFocus::List;
