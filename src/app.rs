@@ -1,13 +1,10 @@
-use std::{collections::HashMap, mem, process::exit};
+use std::mem;
 
-use clap::{Parser, Subcommand, command};
 use color_eyre::Result;
-use log::info;
 use ratatui::{
     DefaultTerminal,
     crossterm::event::{self, Event, KeyCode, KeyEventKind, KeyModifiers},
     prelude::*,
-    widgets::{self, ListState},
 };
 
 use crate::tabs::{Tab, search::ScaffoldTab};

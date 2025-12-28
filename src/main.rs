@@ -1,14 +1,10 @@
 pub mod app;
+pub mod input_widget;
 pub mod tabs;
 pub mod template_info;
 
-use std::{collections::HashMap, io::stdout, process::exit};
 
-use clap::{Parser, Subcommand, command};
 use color_eyre::Result;
-use ratatui::{
-    DefaultTerminal, crossterm::{event::{DisableMouseCapture, EnableMouseCapture}, execute, terminal::{disable_raw_mode, enable_raw_mode}}, prelude::*, widgets::{self, ListState}
-};
 
 use crate::{app::App, template_info::fetch_template_info};
 

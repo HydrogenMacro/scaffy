@@ -1,21 +1,19 @@
-use std::{
-    collections::HashMap,
-    fs::{File, OpenOptions},
-    iter,
-    process::{self, exit}, rc::Rc,
-};
+use std::iter;
 
 use crate::{
     app::Commands,
+    input_widget::visual_input_text,
     tabs::{
-        Tab, project_init::ProjectInitTab, tag::{Tag, TagType, parse_template_info_tags}
-    }, template_info::TEMPLATE_INFOS,
+        Tab,
+        project_init::ProjectInitTab,
+        tag::{Tag, parse_template_info_tags},
+    },
+    template_info::{ArcStr, TEMPLATE_INFOS},
 };
-use log::info;
 use ratatui::{
-    crossterm::event::{Event, KeyCode, MouseButton, MouseEventKind},
+    crossterm::event::{Event, KeyCode},
     prelude::*,
-    widgets::{self, Block, Borders, ListState, block::Title},
+    widgets::{self, Block, ListState},
 };
 use tui_input::{Input, backend::crossterm::EventHandler};
 #[derive(Default)]
@@ -35,9 +33,21 @@ impl ScaffoldTab {
         scaffold_tab
     }
     fn update_list(&mut self) {
-
         self.list_data = TEMPLATE_INFOS.with(|template_infos| {
-            template_infos.borrow().values().map(|template_info| ScaffoldListEntry::new(template_info.name.clone(), template_info.path.clone(), template_info.author.clone(), template_info.description.clone(), parse_template_info_tags(&template_info.tags))).collect()
+            template_infos
+                .borrow()
+                .values()
+                .map(|template_info| {
+                    ScaffoldListEntry::new(
+                        template_info.name.clone(),
+                        template_info.path.clone(),
+                        template_info.author.clone(),
+                        template_info.description.clone(),
+                        parse_template_info_tags(&template_info.tags),
+                    )
+                })
+                .filter(|scaffold_list_entry| scaffold_list_entry.matches_query(&self.list_data_search_query))
+                .collect()
         });
         self.list_state.select(Some(0));
     }
@@ -45,14 +55,20 @@ impl ScaffoldTab {
 
 #[derive(Debug, Default)]
 pub struct ScaffoldListEntry {
-    template_name: Rc<str>,
-    template_id: Rc<str>,
-    author: Rc<str>,
-    desc: Rc<str>,
+    template_name: ArcStr,
+    template_id: ArcStr,
+    author: ArcStr,
+    desc: ArcStr,
     tags: Vec<Tag>,
 }
 impl ScaffoldListEntry {
-    pub fn new(template_name: Rc<str>, template_id: Rc<str>, author: Rc<str>, desc: Rc<str>, tags: Vec<Tag>) -> Self {
+    pub fn new(
+        template_name: ArcStr,
+        template_id: ArcStr,
+        author: ArcStr,
+        desc: ArcStr,
+        tags: Vec<Tag>,
+    ) -> Self {
         ScaffoldListEntry {
             template_name,
             template_id,
@@ -62,7 +78,12 @@ impl ScaffoldListEntry {
         }
     }
     pub fn matches_query<'a>(&self, queries: &str) -> bool {
-        queries.split(" ").all(|query| self.template_name.contains(query) || self.desc.contains(query) || self.tags.iter().any(|tag| tag.text.contains(query)) || self.author.contains(query))
+        queries.split(" ").all(|query| {
+            self.template_name.to_lowercase().contains(query)
+                || self.desc.to_lowercase().contains(query)
+                || self.tags.iter().any(|tag| tag.text.to_lowercase().contains(query))
+                || self.author.to_lowercase().contains(query)
+        })
     }
 }
 
@@ -84,16 +105,34 @@ impl ScaffoldListEntry {
             Line::from(vec![
                 Span::styled(
                     &*self.template_name,
-                    Style::new().add_modifier(Modifier::BOLD).bg(bg_color).fg(text_color),
+                    Style::new()
+                        .add_modifier(Modifier::BOLD)
+                        .bg(bg_color)
+                        .fg(text_color),
                 ),
-                Span::styled(" by ", Style::new().add_modifier(Modifier::ITALIC).bg(bg_color).fg(light_text_color)),
-                Span::styled(&*self.author, Style::new().add_modifier(Modifier::ITALIC).bg(bg_color).fg(light_text_color)),
+                Span::styled(
+                    " by ",
+                    Style::new()
+                        .add_modifier(Modifier::ITALIC)
+                        .bg(bg_color)
+                        .fg(light_text_color),
+                ),
+                Span::styled(
+                    &*self.author,
+                    Style::new()
+                        .add_modifier(Modifier::ITALIC)
+                        .bg(bg_color)
+                        .fg(light_text_color),
+                ),
                 Span::raw(" ".repeat(200)).bg(bg_color),
             ]),
             Line::from(vec![
                 Span::styled(
                     &*self.desc,
-                    Style::new().add_modifier(Modifier::ITALIC).bg(bg_color).fg(light_text_color),
+                    Style::new()
+                        .add_modifier(Modifier::ITALIC)
+                        .bg(bg_color)
+                        .fg(light_text_color),
                 ),
                 Span::raw(" ".repeat(200)).bg(bg_color),
             ]),
@@ -133,16 +172,8 @@ impl Tab for ScaffoldTab {
         };
         self.areas.list = list_area;
         self.areas.searchbar = searchbar_area;
-        let mut searchbar_text = self.searchbar_input.value().to_string();
-        if let ScaffoldTabFocus::Searchbar = self.focus {
-            if searchbar_text.len() == self.searchbar_input.cursor() {
-                searchbar_text.push('\u{2588}');
-            } else {
-                let cursor_pos = self.searchbar_input.cursor();
-                searchbar_text.replace_range(cursor_pos..=cursor_pos, "\u{2588}");
-            }
-        }
-        let mut searchbar = widgets::Paragraph::new(searchbar_text)
+
+        let searchbar = widgets::Paragraph::new(visual_input_text(&mut self.searchbar_input))
             .scroll((
                 0,
                 self.searchbar_input
@@ -200,17 +231,19 @@ impl Tab for ScaffoldTab {
                     }
                     ScaffoldTabFocus::Searchbar => {}
                 },
-                KeyCode::Enter => {
-                    match self.focus {
-                        ScaffoldTabFocus::List => {
-                            commands.cache_current_tab();
-                            commands.switch_tab_to(ProjectInitTab::new(self.list_data[self.list_state.selected().unwrap()].template_id.clone()));
-                        }
-                        ScaffoldTabFocus::Searchbar => {
-                            self.focus = ScaffoldTabFocus::List;
-                        }
+                KeyCode::Enter => match self.focus {
+                    ScaffoldTabFocus::List => {
+                        commands.cache_current_tab();
+                        commands.switch_tab_to(ProjectInitTab::new(
+                            self.list_data[self.list_state.selected().unwrap()]
+                                .template_id
+                                .clone(),
+                        ));
                     }
-                }
+                    ScaffoldTabFocus::Searchbar => {
+                        self.focus = ScaffoldTabFocus::List;
+                    }
+                },
                 KeyCode::Esc => {
                     commands.quit();
                 }

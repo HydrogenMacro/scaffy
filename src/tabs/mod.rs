@@ -2,12 +2,10 @@ pub mod project_init;
 pub mod search;
 pub mod tag;
 
-use clap::Subcommand;
 use ratatui::{
-    Frame,
     buffer::Buffer,
     crossterm::event::Event,
-    layout::{Position, Rect},
+    layout::Rect,
 };
 
 use crate::app::Commands;

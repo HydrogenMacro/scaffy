@@ -1,8 +1,7 @@
-use std::rc::Rc;
 
-use ratatui::{prelude::*, widgets};
+use ratatui::prelude::*;
 
-use crate::template_info::TemplateInfoTags;
+use crate::template_info::{ArcStr, TemplateInfoTags};
 
 #[derive(Debug, Clone, Copy)]
 pub enum TagType {
@@ -14,12 +13,12 @@ pub enum TagType {
 
 #[derive(Debug)]
 pub struct Tag {
-    pub text: Rc<str>,
+    pub text: ArcStr,
     pub tag_type: TagType,
-    pub version: Option<Rc<str>>,
+    pub version: Option<ArcStr>,
 }
 impl Tag {
-    pub fn new(text: Rc<str>, tag_type: TagType, version: Option<Rc<str>>) -> Self {
+    pub fn new(text: ArcStr, tag_type: TagType, version: Option<ArcStr>) -> Self {
         Tag {
             text,
             tag_type,
@@ -52,7 +51,7 @@ impl Tag {
 
 pub fn parse_template_info_tags(template_info_tags: &TemplateInfoTags) -> Vec<Tag> {
     let map_to_tag = |tag_type: TagType| {
-        return move |(name, version): (&Rc<str>, &Option<Rc<str>>)| {
+        return move |(name, version): (&ArcStr, &Option<ArcStr>)| {
             Tag::new(name.clone(), tag_type, version.clone())
         };
     };
