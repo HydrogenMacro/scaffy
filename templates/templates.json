@@ -45,13 +45,15 @@
         "description": "A Rust template for WASM dev",
         "tags": {
             "languages": {
-                "rust": null
+                "rust": null,
+                "wasm": null
             },
             "frameworks": {
             },
             "libraries": {
             },
             "misc": {
+                "wasm-pack": "null"
             }
         }
     }
