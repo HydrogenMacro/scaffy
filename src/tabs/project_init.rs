@@ -16,7 +16,6 @@ use crate::template_info::get_template_file_contents;
 use crate::template_info::get_template_structure;
 use color_eyre::eyre;
 use futures::future::join_all;
-use log::info;
 use ratatui::crossterm::event::Event;
 use ratatui::crossterm::event::KeyCode;
 use ratatui::crossterm::event::KeyModifiers;
@@ -101,7 +100,6 @@ impl ProjectInitTab {
     pub fn project_path(&self) -> PathBuf {
         let mut path = PathBuf::from(self.project_parent_path_input.value());
         path.push(self.project_root_folder_name_input.value());
-        info!("{:?}", &path);
         return path;
     }
 }
@@ -376,6 +374,5 @@ fn init_project(
     smol::block_on(join_all(&mut tasks))
         .into_iter()
         .collect::<eyre::Result<Vec<()>>>()?;
-    info!("{:?}", project_root_dir);
     Ok(())
 }

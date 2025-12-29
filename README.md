@@ -9,7 +9,7 @@ cargo install scaffy
 ## Usage
 Just run `scaffy` in any directory, you can choose any template and where to clone it within the TUI. Keyboard navigation instructions are provided at the bottom of the TUI.
 ### Searchbar
-The searchbar considers strictly spelled queries separated by spaces, which are each filtered through every template to see if their name, description, or tags contain it.
+The searchbar considers strictly spelled case-insensitive queries separated by spaces, which are each filtered through every template to see if their name, description, or tags contain it.
 
 ## Making a Template
 
