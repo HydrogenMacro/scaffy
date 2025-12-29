@@ -37,5 +37,22 @@
             "misc": {
             }
         }
+    },
+    {
+        "name": "Rust WASM Starter",
+        "path": "rust-wasm-starter",
+        "author": "hydrogenmacro",
+        "description": "A Rust template for WASM dev",
+        "tags": {
+            "languages": {
+                "rust": null
+            },
+            "frameworks": {
+            },
+            "libraries": {
+            },
+            "misc": {
+            }
+        }
     }
 ]

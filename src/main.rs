@@ -9,7 +9,10 @@ use color_eyre::Result;
 use crate::{app::App, template_info::fetch_template_info};
 
 fn main() -> Result<()> {
-    simple_logging::log_to_file(".logs", log::LevelFilter::Info)?;
+    #[cfg(debug_assertions)]
+    {
+        simple_logging::log_to_file(".logs", log::LevelFilter::Info)?;
+    }
     color_eyre::install()?;
     let eyre_hook = std::panic::take_hook();
     std::panic::set_hook(Box::new(move |panic_info| {
