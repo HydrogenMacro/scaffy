@@ -42,8 +42,8 @@ pub enum ProjectInitPage {
 impl ProjectInitPage {
     pub fn page_num(&self) -> usize {
         match self {
-            ProjectInitPage::Preview => 1,
-            ProjectInitPage::Name => 2,
+            ProjectInitPage::Name => 1,
+            ProjectInitPage::Preview => 2,
             ProjectInitPage::Path { .. } => 3,
             ProjectInitPage::Confirmation => 4,
         }
