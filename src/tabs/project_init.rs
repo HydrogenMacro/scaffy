@@ -1,7 +1,6 @@
 use std::env;
 use std::path::Path;
 use std::path::PathBuf;
-use std::str::FromStr;
 use std::sync::Arc;
 
 use crate::app::Commands;
@@ -11,7 +10,6 @@ use crate::string_ops::scaffy_string_replacement;
 use crate::string_ops::string_to_casing;
 use crate::tabs::Tab;
 use crate::template_info::ArcStr;
-use crate::template_info::TEMPLATE_INFOS;
 use crate::template_info::TemplateStructureDirEntryData;
 use crate::template_info::format_template_structure;
 use crate::template_info::get_template_file_contents;
@@ -126,8 +124,10 @@ impl Tab for ProjectInitTab {
                     "Template Preview - Press <ENTER> to confirm template selection",
                     Style::new().add_modifier(Modifier::BOLD),
                 );
-                let mut preview =
-                    widgets::Paragraph::new(format_template_structure(&template_structure, self.project_name_input.value()));
+                let mut preview = widgets::Paragraph::new(format_template_structure(
+                    &template_structure,
+                    self.project_name_input.value(),
+                ));
                 let max_scroll =
                     preview.line_count(preview_area.width) as u16 - preview_area.height;
                 if self.preview_scroll_pos > max_scroll {
@@ -165,7 +165,7 @@ impl Tab for ProjectInitTab {
                         self.project_name_input.value(),
                         "-",
                         WordCasing::Lower,
-                        None
+                        None,
                     ));
                     self.should_autoset_root_folder_name = false;
                 }
@@ -214,9 +214,15 @@ impl Tab for ProjectInitTab {
                 let paragraph = widgets::Paragraph::new(vec![
                     Line::from(vec![
                         Span::raw("Confirm creation of "),
-                        Span::styled(&*self.template_path, Style::new().add_modifier(Modifier::BOLD)),
+                        Span::styled(
+                            &*self.template_path,
+                            Style::new().add_modifier(Modifier::BOLD),
+                        ),
                         Span::raw(" at \""),
-                        Span::styled(project_path.to_string_lossy(), Style::new().add_modifier(Modifier::ITALIC)),
+                        Span::styled(
+                            project_path.to_string_lossy(),
+                            Style::new().add_modifier(Modifier::ITALIC),
+                        ),
                         Span::raw("\"?"),
                     ]),
                     Line::raw("Press <ENTER> to confirm."),
@@ -242,8 +248,7 @@ impl Tab for ProjectInitTab {
                 }
 
                 KeyCode::Enter => match &self.current_page {
-                    ProjectInitPage::Preview
-                    | ProjectInitPage::Path { .. } => {
+                    ProjectInitPage::Preview | ProjectInitPage::Path { .. } => {
                         self.current_page.switch_to_next_page();
                         return;
                     }
@@ -257,7 +262,7 @@ impl Tab for ProjectInitTab {
                         init_project(
                             self.template_path.clone(),
                             self.project_name_input.value(),
-                            &self.project_path()
+                            &self.project_path(),
                         )
                         .unwrap();
                         commands.quit();
@@ -324,10 +329,7 @@ fn init_project(
     while let Some((dir_entry_name, dir_entry, parent_path)) = stack.pop() {
         let joined_parent_path: ArcStr = Arc::from(parent_path.join("/"));
         match dir_entry {
-            TemplateStructureDirEntryData::Folder {
-                inject_project_info,
-                children,
-            } => {
+            TemplateStructureDirEntryData::Folder { children, .. } => {
                 stack.extend(
                     children
                         .into_iter()
@@ -354,11 +356,13 @@ fn init_project(
                     .await?;
                     let mut file_parent_path = project_root_dir.to_owned();
                     for path_part in parent_path {
-                        let formatted_path_part = scaffy_string_replacement(path_part, project_name);
+                        let formatted_path_part =
+                            scaffy_string_replacement(path_part, project_name);
                         file_parent_path.push(&*formatted_path_part);
                     }
                     fs::create_dir_all(&file_parent_path).await?;
-                    let formatted_dir_entry_name = scaffy_string_replacement(dir_entry_name, project_name);
+                    let formatted_dir_entry_name =
+                        scaffy_string_replacement(dir_entry_name, project_name);
                     let file_path = file_parent_path.join(formatted_dir_entry_name);
                     if inject_project_info {
                         file_contents = scaffy_string_replacement(file_contents, project_name);
@@ -369,7 +373,7 @@ fn init_project(
             }
         }
     }
-    let results: Vec<()> = smol::block_on(join_all(&mut tasks))
+    smol::block_on(join_all(&mut tasks))
         .into_iter()
         .collect::<eyre::Result<Vec<()>>>()?;
     info!("{:?}", project_root_dir);

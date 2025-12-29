@@ -1,4 +1,3 @@
-
 use ratatui::prelude::*;
 
 use crate::template_info::{ArcStr, TemplateInfoTags};

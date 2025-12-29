@@ -85,7 +85,21 @@ thread_local! {
 pub fn scaffy_string_replacement(input: impl AsRef<str>, project_name: impl AsRef<str>) -> String {
     let input = input.as_ref();
     let mut output = Vec::with_capacity(input.len());
-    let replacement_strings: Vec<String> = SCAFFY_CASING_ARGS.iter().map(|&(joiner, word_casing, first_word_casing)| string_to_casing(project_name.as_ref(), joiner, word_casing, first_word_casing)).collect();
-    SCAFFY_STRING_SEARCHER.with(|scaffy_string_searcher| scaffy_string_searcher.try_stream_replace_all(input.as_bytes(), &mut output, &replacement_strings).unwrap());
+    let replacement_strings: Vec<String> = SCAFFY_CASING_ARGS
+        .iter()
+        .map(|&(joiner, word_casing, first_word_casing)| {
+            string_to_casing(
+                project_name.as_ref(),
+                joiner,
+                word_casing,
+                first_word_casing,
+            )
+        })
+        .collect();
+    SCAFFY_STRING_SEARCHER.with(|scaffy_string_searcher| {
+        scaffy_string_searcher
+            .try_stream_replace_all(input.as_bytes(), &mut output, &replacement_strings)
+            .unwrap()
+    });
     return String::try_from(output).unwrap();
 }

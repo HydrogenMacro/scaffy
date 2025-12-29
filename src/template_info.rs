@@ -1,6 +1,4 @@
 use color_eyre::eyre;
-use itertools::Itertools;
-use log::info;
 use serde::Deserialize;
 use std::{
     cell::{LazyCell, RefCell},
@@ -69,7 +67,10 @@ pub enum TemplateStructureDirEntryData {
 }
 
 pub type TemplateStructure = HashMap<ArcStr, TemplateStructureDirEntryData>;
-pub fn format_template_structure(template_structure: &TemplateStructure, project_name: impl AsRef<str>) -> String {
+pub fn format_template_structure(
+    template_structure: &TemplateStructure,
+    project_name: impl AsRef<str>,
+) -> String {
     let template_entry_sorting_fn = |&(dir_entry_name_1, dir_entry_1, _): &(
         &Arc<str>,
         &TemplateStructureDirEntryData,
@@ -101,12 +102,10 @@ pub fn format_template_structure(template_structure: &TemplateStructure, project
     stack.sort_unstable_by(template_entry_sorting_fn);
 
     while let Some((dir_entry_name, dir_entry, nest_level)) = stack.pop() {
-        let formatted_dir_entry_name = scaffy_string_replacement(dir_entry_name, project_name.as_ref());
+        let formatted_dir_entry_name =
+            scaffy_string_replacement(dir_entry_name, project_name.as_ref());
         match dir_entry {
-            TemplateStructureDirEntryData::Folder {
-                inject_project_info,
-                children,
-            } => {
+            TemplateStructureDirEntryData::Folder { children, .. } => {
                 let mut children_entries = children
                     .iter()
                     .map(|(k, v)| (k, v, nest_level + 1))
@@ -117,13 +116,15 @@ pub fn format_template_structure(template_structure: &TemplateStructure, project
                     output.push_str("🖿 ");
                     output.push_str(&formatted_dir_entry_name);
                 } else {
-                    let line = format!("{}🖿 {}", " ".repeat(nest_level * 4), &formatted_dir_entry_name);
+                    let line = format!(
+                        "{}🖿 {}",
+                        " ".repeat(nest_level * 4),
+                        &formatted_dir_entry_name
+                    );
                     output.push_str(&line);
                 }
             }
-            TemplateStructureDirEntryData::File {
-                inject_project_info,
-            } => {
+            TemplateStructureDirEntryData::File { .. } => {
                 if nest_level == 0 {
                     output.push_str("🗎 ");
                     output.push_str(dir_entry_name);

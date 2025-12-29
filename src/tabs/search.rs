@@ -46,7 +46,9 @@ impl ScaffoldTab {
                         parse_template_info_tags(&template_info.tags),
                     )
                 })
-                .filter(|scaffold_list_entry| scaffold_list_entry.matches_query(&self.list_data_search_query))
+                .filter(|scaffold_list_entry| {
+                    scaffold_list_entry.matches_query(&self.list_data_search_query)
+                })
                 .collect()
         });
         self.list_state.select(Some(0));
@@ -81,7 +83,10 @@ impl ScaffoldListEntry {
         queries.split(" ").all(|query| {
             self.template_name.to_lowercase().contains(query)
                 || self.desc.to_lowercase().contains(query)
-                || self.tags.iter().any(|tag| tag.text.to_lowercase().contains(query))
+                || self
+                    .tags
+                    .iter()
+                    .any(|tag| tag.text.to_lowercase().contains(query))
                 || self.author.to_lowercase().contains(query)
         })
     }
