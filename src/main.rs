@@ -2,6 +2,7 @@ pub mod app;
 pub mod input_widget;
 pub mod tabs;
 pub mod template_info;
+pub mod string_ops;
 
 
 use color_eyre::Result;

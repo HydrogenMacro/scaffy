@@ -9,6 +9,8 @@ use std::{
     sync::Arc,
 };
 
+use crate::string_ops::scaffy_string_replacement;
+
 const SOURCE: &'static str = "https://cdn.jsdelivr.net/gh/hydrogenmacro/scaffy@master/templates";
 
 thread_local! {
@@ -67,7 +69,7 @@ pub enum TemplateStructureDirEntryData {
 }
 
 pub type TemplateStructure = HashMap<ArcStr, TemplateStructureDirEntryData>;
-pub fn format_template_structure(template_structure: &TemplateStructure) -> String {
+pub fn format_template_structure(template_structure: &TemplateStructure, project_name: impl AsRef<str>) -> String {
     let template_entry_sorting_fn = |&(dir_entry_name_1, dir_entry_1, _): &(
         &Arc<str>,
         &TemplateStructureDirEntryData,
@@ -99,6 +101,7 @@ pub fn format_template_structure(template_structure: &TemplateStructure) -> Stri
     stack.sort_unstable_by(template_entry_sorting_fn);
 
     while let Some((dir_entry_name, dir_entry, nest_level)) = stack.pop() {
+        let formatted_dir_entry_name = scaffy_string_replacement(dir_entry_name, project_name.as_ref());
         match dir_entry {
             TemplateStructureDirEntryData::Folder {
                 inject_project_info,
@@ -112,9 +115,9 @@ pub fn format_template_structure(template_structure: &TemplateStructure) -> Stri
                 stack.extend(children_entries);
                 if nest_level == 0 {
                     output.push_str("🖿 ");
-                    output.push_str(dir_entry_name);
+                    output.push_str(&formatted_dir_entry_name);
                 } else {
-                    let line = format!("{}╰┬ 🖿 {}", "  ".repeat((nest_level - 1) * 2), &*dir_entry_name);
+                    let line = format!("{}🖿 {}", " ".repeat(nest_level * 4), &formatted_dir_entry_name);
                     output.push_str(&line);
                 }
             }
@@ -125,7 +128,7 @@ pub fn format_template_structure(template_structure: &TemplateStructure) -> Stri
                     output.push_str("🗎 ");
                     output.push_str(dir_entry_name);
                 } else {
-                    let line = format!("{}├ 🗎 {}", " ".repeat(((nest_level - 1) * 2).saturating_sub(1)), &*dir_entry_name);
+                    let line = format!("{}🗎 {}", " ".repeat(nest_level * 4), &*dir_entry_name);
                     output.push_str(&line);
                 }
             }
@@ -170,12 +173,6 @@ pub async fn get_template_file_contents(
     file_parent_path: ArcStr,
     file_name: ArcStr,
 ) -> eyre::Result<String> {
-    info!(
-        "fetching {}{}/{}",
-        template_path.as_ref(),
-        &file_parent_path,
-        &file_name
-    );
     let file_text = surf::get(format!(
         "{}/{}{}/{}",
         SOURCE,

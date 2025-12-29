@@ -71,11 +71,11 @@ The user can provide a project name in the initialization stage, which can be us
 <table>
 <thead>
 <th>Replacement String</th>
-<th>Resulting Inserted Project Name (assuming user entered <code>Project nAme Example</code>)</th>
+<th>Resulting Inserted Project Name (assuming user entered <code>Project name example</code>)</th>
 </thead>
 <tr>
 <td>@@SCAFFY_PROJECT_NAME@@</td>
-<td>Project nAme Example</td>
+<td>Project name example</td>
 </tr>
 <tr>
 <td>@@SCAFFY_PROJECT_NAME_TITLECASE@@</td>
@@ -91,7 +91,7 @@ The user can provide a project name in the initialization stage, which can be us
 </tr>
 <tr>
 <td>@@SCAFFY_PROJECT_NAME_SNAKECASE@@</td>
-<td>Project_nAme_Example</td>
+<td>Project_name_example</td>
 </tr>
 <td>@@SCAFFY_PROJECT_NAME_LOWERSNAKECASE@@</td>
 <td>project_name_example</td>
@@ -101,12 +101,15 @@ The user can provide a project name in the initialization stage, which can be us
 <td>@@SCAFFY_PROJECT_NAME_UPPERSNAKECASE@@</td>
 <td>PROJECT_NAME_EXAMPLE</td>
 </tr>
-<td>@@SCAFFY_PROJECT_NAME_CAMELCASE@@</td>
+<td>@@SCAFFY_PROJECT_NAME_LOWERCAMELCASE@@</td>
+<td>projectNameExample</td>
+</tr>
+<td>@@SCAFFY_PROJECT_NAME_UPPERCAMELCASE@@</td>
 <td>ProjectNameExample</td>
 </tr>
 <tr>
 <td>@@SCAFFY_PROJECT_NAME_KEBABCASE@@</td>
-<td>Project-nAme-Example</td>
+<td>Project-name-example</td>
 </tr>
 <tr>
 <td>@@SCAFFY_PROJECT_NAME_LOWERKEBABCASE@@</td>

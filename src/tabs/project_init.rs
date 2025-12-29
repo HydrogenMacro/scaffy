@@ -6,6 +6,9 @@ use std::sync::Arc;
 
 use crate::app::Commands;
 use crate::input_widget::visual_input_text;
+use crate::string_ops::WordCasing;
+use crate::string_ops::scaffy_string_replacement;
+use crate::string_ops::string_to_casing;
 use crate::tabs::Tab;
 use crate::template_info::ArcStr;
 use crate::template_info::TEMPLATE_INFOS;
@@ -22,6 +25,7 @@ use ratatui::crossterm::event::KeyModifiers;
 use ratatui::prelude::*;
 use ratatui::widgets;
 use ratatui::widgets::Block;
+use smol::fs;
 use tui_input::Input;
 use tui_input::backend::crossterm::EventHandler;
 
@@ -29,7 +33,7 @@ use tui_input::backend::crossterm::EventHandler;
 pub enum PathPageFocus {
     #[default]
     ParentPathInput,
-    RootFolderInput
+    RootFolderInput,
 }
 #[derive(Clone, Copy, Debug)]
 pub enum ProjectInitPage {
@@ -51,19 +55,23 @@ impl ProjectInitPage {
 impl ProjectInitPage {
     pub fn switch_to_next_page(&mut self) {
         *self = match self {
-            ProjectInitPage::Preview => ProjectInitPage::Name,
-            ProjectInitPage::Name => ProjectInitPage::Path { focus: PathPageFocus::default() },
-            ProjectInitPage::Path {..} => ProjectInitPage::Confirmation,
+            ProjectInitPage::Name => ProjectInitPage::Preview,
+            ProjectInitPage::Preview => ProjectInitPage::Path {
+                focus: PathPageFocus::default(),
+            },
+            ProjectInitPage::Path { .. } => ProjectInitPage::Confirmation,
             ProjectInitPage::Confirmation => ProjectInitPage::Confirmation,
         }
     }
 
     pub fn switch_to_previous_page(&mut self) {
         *self = match self {
-            ProjectInitPage::Preview => ProjectInitPage::Preview,
-            ProjectInitPage::Name => ProjectInitPage::Preview,
-            ProjectInitPage::Path { ..}=> ProjectInitPage::Name,
-            ProjectInitPage::Confirmation => ProjectInitPage::Path { focus: PathPageFocus::default() },
+            ProjectInitPage::Name => ProjectInitPage::Name,
+            ProjectInitPage::Preview => ProjectInitPage::Name,
+            ProjectInitPage::Path { .. } => ProjectInitPage::Preview,
+            ProjectInitPage::Confirmation => ProjectInitPage::Path {
+                focus: PathPageFocus::default(),
+            },
         }
     }
 }
@@ -73,28 +81,29 @@ pub struct ProjectInitTab {
     template_path: ArcStr,
     project_name_input: Input,
     project_parent_path_input: Input,
-    project_root_folder_input: Input,
-    should_update_root_folder_val: bool,
-    preview_scroll: usize,
+    project_root_folder_name_input: Input,
+    should_autoset_root_folder_name: bool,
+    preview_scroll_pos: u16,
 }
 impl ProjectInitTab {
     pub fn new(template_path: ArcStr) -> Self {
         // TODO: Add prev invocation recall
         ProjectInitTab {
-            current_page: ProjectInitPage::Preview,
+            current_page: ProjectInitPage::Name,
             template_path: template_path.clone(),
-            project_root_folder_input: Input::new(
+            project_root_folder_name_input: Input::default(),
+            should_autoset_root_folder_name: true,
+            project_parent_path_input: Input::new(
                 env::home_dir().unwrap().to_string_lossy().into(),
             ),
-            should_update_root_folder_val: true,
-            project_parent_path_input: Input::default(),
             project_name_input: Input::default(),
-            preview_scroll: 0,
+            preview_scroll_pos: 0,
         }
     }
     pub fn project_path(&self) -> PathBuf {
         let mut path = PathBuf::from(self.project_parent_path_input.value());
-        path.push(self.project_root_folder_input.value());
+        path.push(self.project_root_folder_name_input.value());
+        info!("{:?}", &path);
         return path;
     }
 }
@@ -111,12 +120,20 @@ impl Tab for ProjectInitTab {
                 let [title_area, preview_area] =
                     Layout::vertical([Constraint::Length(1), Constraint::Fill(1)])
                         .areas(border.inner(area));
-                let template_structure = get_template_structure(self.template_path.clone()).unwrap();
+                let template_structure =
+                    get_template_structure(self.template_path.clone()).unwrap();
                 let title = Text::styled(
-                    "Template Preview",
+                    "Template Preview - Press <ENTER> to confirm template selection",
                     Style::new().add_modifier(Modifier::BOLD),
                 );
-                let preview = widgets::Paragraph::new(format_template_structure(&template_structure));
+                let mut preview =
+                    widgets::Paragraph::new(format_template_structure(&template_structure, self.project_name_input.value()));
+                let max_scroll =
+                    preview.line_count(preview_area.width) as u16 - preview_area.height;
+                if self.preview_scroll_pos > max_scroll {
+                    self.preview_scroll_pos = max_scroll;
+                }
+                preview = preview.scroll((self.preview_scroll_pos, 0));
                 title.render(title_area, buf);
                 preview.render(preview_area, buf);
             }
@@ -137,32 +154,55 @@ impl Tab for ProjectInitTab {
             }
             ProjectInitPage::Path { focus } => {
                 let [parent_path_input_area, root_folder_input_area, stmt_area] =
-                    Layout::vertical([Constraint::Length(3), Constraint::Length(3), Constraint::Length(1)]).areas(border.inner(area));
-                
+                    Layout::vertical([
+                        Constraint::Length(3),
+                        Constraint::Length(3),
+                        Constraint::Length(1),
+                    ])
+                    .areas(border.inner(area));
+                if self.should_autoset_root_folder_name {
+                    self.project_root_folder_name_input = Input::new(string_to_casing(
+                        self.project_name_input.value(),
+                        "-",
+                        WordCasing::Lower,
+                        None
+                    ));
+                    self.should_autoset_root_folder_name = false;
+                }
                 let (parent_path_input_val, root_folder_input_val) = match focus {
-                    PathPageFocus::ParentPathInput => (visual_input_text(&mut self.project_parent_path_input), self.project_root_folder_input.value().into()),
-                    PathPageFocus::RootFolderInput => (self.project_parent_path_input.value().into(), visual_input_text(&mut self.project_root_folder_input))
+                    PathPageFocus::ParentPathInput => (
+                        visual_input_text(&mut self.project_parent_path_input),
+                        self.project_root_folder_name_input.value().into(),
+                    ),
+                    PathPageFocus::RootFolderInput => (
+                        self.project_parent_path_input.value().into(),
+                        visual_input_text(&mut self.project_root_folder_name_input),
+                    ),
                 };
-                let parent_path_input_widget =
-                    widgets::Paragraph::new(parent_path_input_val)
-                        .scroll((
-                            0,
-                            self.project_parent_path_input
-                                .visual_scroll(parent_path_input_area.width as usize)
-                                as u16,
-                        ))
-                        .block(Block::bordered().title("Project Parent Path"));
-                    
-                let root_folder_input_widget =
-                    widgets::Paragraph::new(root_folder_input_val)
-                        .scroll((
-                            0,
-                            self.project_name_input
-                                .visual_scroll(root_folder_input_area.width as usize)
-                                as u16,
-                        ))
-                        .block(Block::bordered().title("Project Root Folder Name"));
-                let stmt = Text::styled(format!("Your project will be made at {}", self.project_path().to_string_lossy()), Style::new());
+                let parent_path_input_widget = widgets::Paragraph::new(parent_path_input_val)
+                    .scroll((
+                        0,
+                        self.project_parent_path_input
+                            .visual_scroll(parent_path_input_area.width as usize)
+                            as u16,
+                    ))
+                    .block(Block::bordered().title("Project Parent Path"));
+
+                let root_folder_input_widget = widgets::Paragraph::new(root_folder_input_val)
+                    .scroll((
+                        0,
+                        self.project_name_input
+                            .visual_scroll(root_folder_input_area.width as usize)
+                            as u16,
+                    ))
+                    .block(Block::bordered().title("Project Root Folder Name"));
+                let stmt = Text::styled(
+                    format!(
+                        "Your project will be made at {}",
+                        self.project_path().to_string_lossy(),
+                    ),
+                    Style::new(),
+                );
                 root_folder_input_widget.render(root_folder_input_area, buf);
                 parent_path_input_widget.render(parent_path_input_area, buf);
                 stmt.render(stmt_area, buf);
@@ -170,7 +210,18 @@ impl Tab for ProjectInitTab {
             ProjectInitPage::Confirmation => {
                 let [paragraph_area] =
                     Layout::vertical([Constraint::Fill(1)]).areas(border.inner(area));
-                let paragraph = widgets::Paragraph::new("Confirm creation?\nPress <ENTER> to confirm.\n Press <ESC> to exit.");
+                let project_path = self.project_path();
+                let paragraph = widgets::Paragraph::new(vec![
+                    Line::from(vec![
+                        Span::raw("Confirm creation of "),
+                        Span::styled(&*self.template_path, Style::new().add_modifier(Modifier::BOLD)),
+                        Span::raw(" at \""),
+                        Span::styled(project_path.to_string_lossy(), Style::new().add_modifier(Modifier::ITALIC)),
+                        Span::raw("\"?"),
+                    ]),
+                    Line::raw("Press <ENTER> to confirm."),
+                    Line::raw("Press <ESC> to exit."),
+                ]);
                 paragraph.render(paragraph_area, buf);
             }
         }
@@ -183,20 +234,30 @@ impl Tab for ProjectInitTab {
             Event::Key(key_ev) => match key_ev.code {
                 KeyCode::Char('q') if key_ev.modifiers.contains(KeyModifiers::ALT) => {
                     self.current_page.switch_to_previous_page();
+                    return;
                 }
                 KeyCode::Tab if key_ev.modifiers.contains(KeyModifiers::SHIFT) => {
                     self.current_page.switch_to_previous_page();
+                    return;
                 }
 
                 KeyCode::Enter => match &self.current_page {
-                    ProjectInitPage::Preview | ProjectInitPage::Name | ProjectInitPage::Path {..}=> {
+                    ProjectInitPage::Preview
+                    | ProjectInitPage::Path { .. } => {
                         self.current_page.switch_to_next_page();
+                        return;
+                    }
+                    ProjectInitPage::Name => {
+                        if self.project_name_input.value().len() != 0 {
+                            self.current_page.switch_to_next_page();
+                        }
+                        return;
                     }
                     ProjectInitPage::Confirmation => {
                         init_project(
                             self.template_path.clone(),
                             self.project_name_input.value(),
-                            &self.project_path(),
+                            &self.project_path()
                         )
                         .unwrap();
                         commands.quit();
@@ -209,25 +270,41 @@ impl Tab for ProjectInitTab {
             },
             _ => {}
         }
-        match self.current_page {
+        match &mut self.current_page {
             ProjectInitPage::Name => {
                 self.project_name_input.handle_event(&ev);
             }
             ProjectInitPage::Confirmation => {}
             ProjectInitPage::Preview => match &ev {
                 Event::Key(key_ev) => match key_ev.code {
-                    KeyCode::Down => {}
-                    KeyCode::Up => {}
+                    KeyCode::Down => {
+                        self.preview_scroll_pos += 1;
+                    }
+                    KeyCode::Up => {
+                        if self.preview_scroll_pos > 0 {
+                            self.preview_scroll_pos -= 1;
+                        }
+                    }
                     _ => {}
                 },
                 _ => {}
             },
-            ProjectInitPage::Path { focus } => {
-                match focus {
-                    PathPageFocus::ParentPathInput => self.project_parent_path_input.handle_event(&ev),
-                    PathPageFocus::RootFolderInput => self.project_root_folder_input.handle_event(&ev),
-                };
-            }
+            ProjectInitPage::Path { focus } => match &ev {
+                Event::Key(key) if key.code == KeyCode::Tab => {
+                    *focus = match focus {
+                        PathPageFocus::ParentPathInput => PathPageFocus::RootFolderInput,
+                        PathPageFocus::RootFolderInput => PathPageFocus::ParentPathInput,
+                    };
+                }
+                ev => match focus {
+                    PathPageFocus::ParentPathInput => {
+                        self.project_parent_path_input.handle_event(&ev);
+                    }
+                    PathPageFocus::RootFolderInput => {
+                        self.project_root_folder_name_input.handle_event(&ev);
+                    }
+                },
+            },
         }
     }
 }
@@ -269,13 +346,24 @@ fn init_project(
                 let template_path = template_path.clone();
 
                 tasks.push(Box::pin(async move {
-                    let z = get_template_file_contents(
+                    let mut file_contents = get_template_file_contents(
                         template_path,
                         joined_parent_path,
                         dir_entry_name.clone(),
                     )
                     .await?;
-                    info!("resolved {:?}", (&dir_entry_name, &parent_path, z.len()));
+                    let mut file_parent_path = project_root_dir.to_owned();
+                    for path_part in parent_path {
+                        let formatted_path_part = scaffy_string_replacement(path_part, project_name);
+                        file_parent_path.push(&*formatted_path_part);
+                    }
+                    fs::create_dir_all(&file_parent_path).await?;
+                    let formatted_dir_entry_name = scaffy_string_replacement(dir_entry_name, project_name);
+                    let file_path = file_parent_path.join(formatted_dir_entry_name);
+                    if inject_project_info {
+                        file_contents = scaffy_string_replacement(file_contents, project_name);
+                    }
+                    fs::write(file_path, file_contents).await?;
                     Ok::<(), eyre::Error>(())
                 }));
             }
