@@ -1,7 +1,11 @@
 [package]
 name = "scaffy"
+description = "A convenient template scaffolding TUI"
+license = "MIT"
+authors = ["hydrogenmacro"]
 version = "0.1.0"
 edition = "2024"
+repository = "https://github.com/HydrogenMacro/scaffy"
 
 [dependencies]
 aho-corasick = "1.1.4"
