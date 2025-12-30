@@ -15,7 +15,7 @@ pub struct Commands {
     pub should_switch_tab_to_cached: bool,
     pub should_cache_current_tab: bool,
     pub should_quit: bool,
-    pub completion_cb: Option<Box<dyn FnOnce()>>
+    pub completion_cb: Option<Box<dyn FnOnce()>>,
 }
 impl Commands {
     pub fn cache_current_tab(&mut self) {
@@ -36,14 +36,14 @@ impl Commands {
 pub struct App {
     current_tab: Box<dyn Tab>,
     cached_tab: Box<dyn Tab>,
-    pub on_complete: Option<Box<dyn FnOnce()>>
+    pub on_complete: Option<Box<dyn FnOnce()>>,
 }
 impl App {
     pub fn new() -> Self {
         Self {
             current_tab: Box::new(ScaffoldTab::new()),
             cached_tab: Box::new(ScaffoldTab::new()),
-            on_complete: None
+            on_complete: None,
         }
     }
 

@@ -264,9 +264,12 @@ impl Tab for ProjectInitTab {
                             &project_root_dir,
                         )
                         .unwrap();
-                        
+
                         commands.quit(Some(Box::new(move || {
-                            println!("Project at {} created! To enter the project, run", project_root_dir.to_string_lossy());
+                            println!(
+                                "Project at {} created! To enter the project, run",
+                                project_root_dir.to_string_lossy()
+                            );
                             println!("cd {}", project_root_dir.to_string_lossy());
                             println!("Good luck!");
                         })));

@@ -174,16 +174,21 @@ pub async fn get_template_file_contents(
     file_parent_path: ArcStr,
     file_name: ArcStr,
 ) -> eyre::Result<String> {
-    let file_text = surf::get(format!(
-        "{}/{}/{}/{}",
-        SOURCE,
-        template_path.as_ref(),
-        file_parent_path,
-        file_name
-    ))
-    .recv_string()
-    .await
-    .map_err(eyre::Error::msg)?;
+    let file_url = if &*file_parent_path == "" {
+        format!("{}/{}/{}", SOURCE, template_path.as_ref(), file_name)
+    } else {
+        format!(
+            "{}/{}/{}/{}",
+            SOURCE,
+            template_path.as_ref(),
+            file_parent_path,
+            file_name
+        )
+    };
+    let file_text = surf::get(file_url)
+        .recv_string()
+        .await
+        .map_err(eyre::Error::msg)?;
 
     return Ok(file_text);
 }
