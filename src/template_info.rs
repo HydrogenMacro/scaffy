@@ -175,7 +175,7 @@ pub async fn get_template_file_contents(
     file_name: ArcStr,
 ) -> eyre::Result<String> {
     let file_text = surf::get(format!(
-        "{}/{}{}/{}",
+        "{}/{}/{}/{}",
         SOURCE,
         template_path.as_ref(),
         file_parent_path,

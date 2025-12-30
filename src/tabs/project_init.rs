@@ -257,13 +257,20 @@ impl Tab for ProjectInitTab {
                         return;
                     }
                     ProjectInitPage::Confirmation => {
+                        let project_root_dir = self.project_path();
                         init_project(
                             self.template_path.clone(),
                             self.project_name_input.value(),
-                            &self.project_path(),
+                            &project_root_dir,
                         )
                         .unwrap();
-                        commands.quit();
+                        
+                        commands.quit(Some(Box::new(move || {
+                            println!("Project at {} created! To enter the project, run", project_root_dir.to_string_lossy());
+                            println!("cd {}", project_root_dir.to_string_lossy());
+                            println!("Good luck!");
+                        })));
+                        env::set_current_dir(self.project_path()).unwrap();
                     }
                 },
                 KeyCode::Esc => {

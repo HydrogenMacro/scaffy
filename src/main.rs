@@ -25,5 +25,8 @@ fn main() -> Result<()> {
     let mut app = App::new();
     let result = app.run(terminal);
     ratatui::restore();
+    if let Some(completion_cb) = app.on_complete {
+        completion_cb();
+    }
     result
 }

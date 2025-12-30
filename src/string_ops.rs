@@ -64,16 +64,16 @@ pub static SCAFFY_PATTERNS: &'static [&'static str] = &[
 pub static SCAFFY_CASING_ARGS: &'static [(&'static str, WordCasing, Option<WordCasing>)] = &[
     (" ", WordCasing::Preserve, None),
     (" ", WordCasing::Title, None),
-    (" ", WordCasing::Title, None),
-    (" ", WordCasing::Title, None),
-    ("_", WordCasing::Title, None),
-    ("_", WordCasing::Title, None),
-    ("_", WordCasing::Title, None),
+    (" ", WordCasing::Upper, None),
+    (" ", WordCasing::Lower, None),
+    ("_", WordCasing::Preserve, None),
+    ("_", WordCasing::Upper, None),
+    ("_", WordCasing::Lower, None),
     ("", WordCasing::Title, Some(WordCasing::Lower)),
     ("", WordCasing::Title, None),
-    ("-", WordCasing::Title, None),
-    ("-", WordCasing::Title, None),
-    ("-", WordCasing::Title, None),
+    ("-", WordCasing::Preserve, None),
+    ("-", WordCasing::Lower, None),
+    ("-", WordCasing::Upper, None),
 ];
 thread_local! {
     pub static SCAFFY_STRING_SEARCHER: LazyCell<AhoCorasick> = LazyCell::new(|| {

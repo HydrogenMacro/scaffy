@@ -4,6 +4,7 @@
  - Tanstack Router
  - [`cn`](https://www.dmaisano.dev/posts/the-tailwind-cn-utility/) function usage
  - [daisyui-based utility theme colors](https://daisyui.com/docs/colors/)
+
 ## Initialization
 
 ```

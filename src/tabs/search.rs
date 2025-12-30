@@ -250,7 +250,7 @@ impl Tab for ScaffoldTab {
                     }
                 },
                 KeyCode::Esc => {
-                    commands.quit();
+                    commands.quit(None);
                 }
                 _ => {}
             },

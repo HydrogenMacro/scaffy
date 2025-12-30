@@ -15,6 +15,7 @@ pub struct Commands {
     pub should_switch_tab_to_cached: bool,
     pub should_cache_current_tab: bool,
     pub should_quit: bool,
+    pub completion_cb: Option<Box<dyn FnOnce()>>
 }
 impl Commands {
     pub fn cache_current_tab(&mut self) {
@@ -23,8 +24,9 @@ impl Commands {
     pub fn switch_tab_to(&mut self, next_tab: impl Tab + 'static) {
         self.next_tab = Some(Box::new(next_tab));
     }
-    pub fn quit(&mut self) {
+    pub fn quit(&mut self, completion_cb: Option<Box<dyn FnOnce()>>) {
         self.should_quit = true;
+        self.completion_cb = completion_cb;
     }
     pub fn switch_tab_to_cached(&mut self) {
         self.should_switch_tab_to_cached = true;
@@ -34,12 +36,14 @@ impl Commands {
 pub struct App {
     current_tab: Box<dyn Tab>,
     cached_tab: Box<dyn Tab>,
+    pub on_complete: Option<Box<dyn FnOnce()>>
 }
 impl App {
     pub fn new() -> Self {
         Self {
             current_tab: Box::new(ScaffoldTab::new()),
             cached_tab: Box::new(ScaffoldTab::new()),
+            on_complete: None
         }
     }
 
@@ -70,6 +74,7 @@ impl App {
             if commands.should_switch_tab_to_cached {
                 mem::swap(&mut self.cached_tab, &mut self.current_tab);
             }
+            self.on_complete = commands.completion_cb;
             if commands.should_quit {
                 return Ok(());
             }
