@@ -2,6 +2,8 @@
 A convenient project template scaffolding TUI.
 
 ## Installation
+> If you are on Linux, you might need to install some system dependencies of libraries that are used: https://github.com/http-rs/surf#installation
+
 ```
 cargo install scaffy
 ```
