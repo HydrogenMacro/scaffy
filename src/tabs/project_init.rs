@@ -127,7 +127,7 @@ impl Tab for ProjectInitTab {
                     self.project_name_input.value(),
                 ));
                 let max_scroll =
-                    preview.line_count(preview_area.width) as u16 - preview_area.height;
+                    (preview.line_count(preview_area.width) as u16).saturating_sub(preview_area.height);
                 if self.preview_scroll_pos > max_scroll {
                     self.preview_scroll_pos = max_scroll;
                 }
